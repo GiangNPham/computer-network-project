@@ -5,14 +5,19 @@
 #include <netinet/in.h>
 #include <iostream>
 
+using namespace std;
 
 #define PORT 6767
 #define MAXBUF 1024
 
-int main() {
+int main(int argc, char* argv[]) {
     int sockfd;
     char buffer[MAXBUF];
-    const char *hello = "Open";
+    string openn = "Open ";
+    
+    openn += argv[1];
+    
+    const char* openMsg = openn.c_str();
     struct sockaddr_in servaddr;
 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -26,21 +31,50 @@ int main() {
     // Fill server address info
     servaddr.sin_family = AF_INET;              // IPv4
     servaddr.sin_port   = htons(PORT);          // Server port
-    servaddr.sin_addr.s_addr = inet_addr("11.29.6.82"); // Server IP
+    servaddr.sin_addr.s_addr = inet_addr("***********"); // Server IP
 
     socklen_t len = sizeof(servaddr);
 
     // Send message to server
-    sendto(sockfd, hello, strlen(hello), MSG_CONFIRM,
+    sendto(sockfd, openMsg, strlen(openMsg), MSG_CONFIRM,
            (const struct sockaddr *)&servaddr, sizeof(servaddr));
-    printf("Hello message sent.\n");
 
     // Receive reply from server
     int n = recvfrom(sockfd, buffer, MAXBUF, MSG_WAITALL,
                      (struct sockaddr *)&servaddr, &len);
 
     buffer[n] = '\0';   // Null terminate received data
-    printf("Server: %s\n", buffer);
+    printf("%s\n", buffer);
+        
+    for (int i = 0; i < 10; i++){
+        const char* math = "2*4";
+        // Send message to server
+        sendto(sockfd, math, strlen(math), MSG_CONFIRM,
+            (const struct sockaddr *)&servaddr, sizeof(servaddr));
+
+        // Receive reply from server
+        memset(buffer, 0, MAXBUF);
+        n = recvfrom(sockfd, buffer, MAXBUF, MSG_WAITALL,
+                        (struct sockaddr *)&servaddr, &len);
+
+        buffer[n] = '\0';   // Null terminate received data
+        printf("%s\n", buffer);
+        sleep(1);
+    }
+
+    const char* cl = "Close";
+    // Send message to server
+    sendto(sockfd, cl, strlen(cl), MSG_CONFIRM,
+           (const struct sockaddr *)&servaddr, sizeof(servaddr));
+
+    // Receive reply from server
+    memset(buffer, 0, MAXBUF);
+    n = recvfrom(sockfd, buffer, MAXBUF, MSG_WAITALL,
+                     (struct sockaddr *)&servaddr, &len);
+
+    buffer[n] = '\0';   // Null terminate received data
+    printf("%s\n", buffer);
+    
 
     // Close socket
     close(sockfd);

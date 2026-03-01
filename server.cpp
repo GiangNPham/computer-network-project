@@ -84,7 +84,7 @@ int main(){
 
     /*
     Request format:
-    1. Open
+    1. Open [name]
     2. Math operation
     3. Close
     */
@@ -101,7 +101,6 @@ int main(){
 
         ssize_t bytesRead = recvfrom(socketfd, (char *) buffer, MAXBUF, MSG_WAITALL, (sockaddr*) &clientaddr, &len);
         buffer[bytesRead] = '\0';
-        cout << "here\n";
 
         int id = -1;
 
@@ -114,33 +113,42 @@ int main(){
             }
         }
 
+
         if (id == -1){
-            if (buffer[0] == 'O'){
+            if (strncmp(buffer, "Open", 4) == 0) {
                 // create new entry for a new client
                 chrono::system_clock::time_point now = chrono::system_clock::now();
                 time_t now_c = chrono::system_clock::to_time_t(now);
-                clients.emplace_back(buffer, now_c, clientaddr);
+
+                clients.emplace_back(buffer + 5, now_c, clientaddr);
 
                 // send acknowledgement and log out
 
-                string successMessage = "Server has set up a connection!\n";
-                sendto(socketfd, (char *)successMessage.c_str(), successMessage.length(), MSG_CONFIRM, (sockaddr *) &clientaddr, len);
+                const char*successMessage = "Server has set up a connection!\n";
+                sendto(socketfd, successMessage, strlen(successMessage), MSG_CONFIRM, (sockaddr *) &clientaddr, len);
 
-                cout << "Client " << buffer << " opened a connection at " << now_c << "\n";
+                char* timeString = std::ctime(&now_c); 
+
+                cout << "Client " << clients.back().name << " opened a connection at " << timeString;
             } else {
-                string invalidMessage = "Client has not set up connection with server!\n";
-                sendto(socketfd, (char *)invalidMessage.c_str(), invalidMessage.length(), MSG_CONFIRM, (sockaddr *) &clientaddr, len);
+                const char*invalidMessage = "Client has not set up connection with server!\n";
+                sendto(socketfd, invalidMessage, strlen(invalidMessage), MSG_CONFIRM, (sockaddr *) &clientaddr, len);
             }
             continue;
         }
 
-        if (buffer[0] == 'O'){
-            // if the client has already opened a connection then send an error message
-            string invalidMessage = "Already opened a connection!\n";
-            sendto(socketfd, (char *)invalidMessage.c_str(), invalidMessage.length(), MSG_CONFIRM, (sockaddr *) &clientaddr, len);
+        // log out detail of the request
+        cout << "Client " << clients[id].name << " sent a request: " << buffer << "\n";
 
-        } else if (buffer[0] == 'C') {
+        if (strncmp(buffer, "Open", 4) == 0){
+            // if the client has already opened a connection then send an error message
+            const char*invalidMessage = "Already opened a connection!\n";
+            sendto(socketfd, invalidMessage, strlen(invalidMessage), MSG_CONFIRM, (sockaddr *) &clientaddr, len);
+
+        } else if (strcmp(buffer, "Close") == 0) {
             clients[id].valid = false;
+            const char*closeMessage = "Server has closed the connection!\n";
+            sendto(socketfd, closeMessage, strlen(closeMessage), MSG_CONFIRM, (sockaddr *) &clientaddr, len);
 
         } else if (isdigit(buffer[0])){
             int result = calculateMath(buffer);
@@ -150,8 +158,8 @@ int main(){
 
             sendto(socketfd, (char *)message.c_str(), message.length(), MSG_CONFIRM, (sockaddr *) &clientaddr, len);
         } else {
-            string invalidMessage = "Request is invalid, try again!\n";
-            sendto(socketfd, (char *)invalidMessage.c_str(), invalidMessage.length(), MSG_CONFIRM, (sockaddr *) &clientaddr, len);
+            const char*invalidMessage = "Request is invalid, try again!\n";
+            sendto(socketfd, invalidMessage, strlen(invalidMessage), MSG_CONFIRM, (sockaddr *) &clientaddr, len);
         }
         
     }
