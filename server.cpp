@@ -99,12 +99,13 @@ int main(){
     while (1){
         memset(&clientaddr, 0, sizeof(clientaddr)); 
 
+        // blocking operation
         ssize_t bytesRead = recvfrom(socketfd, (char *) buffer, MAXBUF, MSG_WAITALL, (sockaddr*) &clientaddr, &len);
         buffer[bytesRead] = '\0';
 
         int id = -1;
 
-        for (int i = 0; i < clients.size(); i++){
+        for (int i = 0; i < (int)clients.size(); i++){
             // if the address is in the vector and is valid (has not been closed)
             client c = clients[i];
             if (c.addr.sin_family == clientaddr.sin_family && c.addr.sin_port == clientaddr.sin_port && c.addr.sin_addr.s_addr == clientaddr.sin_addr.s_addr && c.valid){

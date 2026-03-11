@@ -1,0 +1,13 @@
+TODO:
+1. Server keeps track of the users (how long?)
+2. Design protocol: 3. Format for keeping logs of clients’ activities on the server side. 
+3. Project partners' contributions
+4. Code comment
+5. Design document
+
+
+Assumptions:
+1. Math operations allowed are addition, subtraction, multiplication, division between 2 numbers and the 2 numbers with the result must be stored correctly using 32 bits (int type in C++).
+2. Joining: "Open [client's name]"
+   Terminating: "Close". When the user types in "quit", the client will send this terminating message to the server to close down the connection
+3. 
