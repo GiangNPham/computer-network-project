@@ -23,11 +23,12 @@ struct client {
     client(string n, time_t t, sockaddr_in a) : name(n), connectedTime(t), addr(a), valid(true) {}
 };
 
-// assume that the math operation is valid, between 2 integers, and the end result is within 32 bits
-int calculateMath(char* buffer){ // input string here must be null-terminated, else need to have another input as the string length
-    int num1 = 0, num2 = 0;
+// assume that the math operation is valid, and the end result can be large
+double calculateMath(char* buffer){ // input string here must be null-terminated, else need to have another input as the string length
+    double num1 = 0, num2 = 0;
     char op = 0;
     int i = 0;
+    if (buffer[i] == '-') i++;
     while (buffer[i] && !(buffer[i] == '+' || buffer[i] == '-' || buffer[i] == '*' || buffer[i] == '/')) {
         i++;
     }
@@ -35,8 +36,8 @@ int calculateMath(char* buffer){ // input string here must be null-terminated, e
     if (buffer[i]) {
         op = buffer[i];
         buffer[i] = '\0'; 
-        num1 = atoi(buffer);
-        num2 = atoi(buffer + i + 1);
+        num1 = atof(buffer);
+        num2 = atof(buffer + i + 1);
         buffer[i] = op; 
     } else {
         // Invalid format
@@ -151,8 +152,8 @@ int main(){
             const char*closeMessage = "Server has closed the connection!\n";
             sendto(socketfd, closeMessage, strlen(closeMessage), MSG_CONFIRM, (sockaddr *) &clientaddr, len);
 
-        } else if (isdigit(buffer[0])){
-            int result = calculateMath(buffer);
+        } else if (isdigit(buffer[0]) || buffer[0] == '-'){
+            double result = calculateMath(buffer);
             stringstream ss;
             ss << "Result is " << result << "\n";
             string message = ss.str();
